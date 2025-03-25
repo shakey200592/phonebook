@@ -12,6 +12,8 @@ app.use(
 const cors = require("cors");
 app.use(cors());
 
+app.use(express.static("dist"));
+
 let phonebook = [
   {
     id: 1,

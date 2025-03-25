@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const BASE_URL = "http://localhost:3001/api/persons";
+const BASE_URL = "/api/persons";
 
 function App() {
   const [persons, setPersons] = useState([]);
