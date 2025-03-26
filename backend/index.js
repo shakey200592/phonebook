@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const app = express();
 app.use(express.json());
@@ -13,6 +15,8 @@ const cors = require("cors");
 app.use(cors());
 
 app.use(express.static("dist"));
+
+const Person = require("./models/person");
 
 let phonebook = [
   {
@@ -38,7 +42,9 @@ let phonebook = [
 ];
 
 app.get("/api/persons/", (req, res) => {
-  res.json(phonebook);
+  Person.find({}).then((people) => {
+    res.json(people);
+  });
 });
 
 app.get("/info", (req, res) => {
@@ -51,17 +57,10 @@ app.get("/info", (req, res) => {
 });
 
 app.get("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const person = phonebook.find((p) => p.id === id);
-  person ? res.json(person) : res.status(404).end();
+  Person.findById(req.params.id).then((note) => res.json(note));
 });
 
 app.post("/api/persons/", (req, res) => {
-  const maxId =
-    phonebook.length > 0
-      ? Math.max(...phonebook.map((person) => Number(person.id)))
-      : 0;
-
   const body = req.body;
 
   if (!body.name) {
@@ -72,14 +71,12 @@ app.post("/api/persons/", (req, res) => {
     return res.status(400).json({ error: "Already exists" });
   }
 
-  const person = {
-    id: maxId + 1,
+  const addperson = new Person({
     name: body.name,
     number: body.number,
-  };
+  });
 
-  phonebook = phonebook.concat(person);
-  res.json(person);
+  addperson.save().then((savedPerson) => res.json(savedPerson));
 });
 
 app.delete("/api/persons/:id", (req, res) => {
@@ -93,6 +90,6 @@ app.delete("/api/persons/:id", (req, res) => {
   res.status(204).end();
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT);
 console.log(`Server Listening on Port ${PORT}`);
