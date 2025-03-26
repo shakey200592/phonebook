@@ -15,29 +15,6 @@ app.use(
 
 const Person = require("./models/person");
 
-let phonebook = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
-
 app.get("/api/persons/", (req, res) => {
   Person.find({}).then((people) => {
     res.json(people);
@@ -46,10 +23,8 @@ app.get("/api/persons/", (req, res) => {
 
 app.get("/info", (req, res) => {
   const date = new Date();
-  res.send(
-    `<p>Phonebook has info for ${
-      phonebook.length
-    } people</p><p>${date.toString()}</p>`
+  Person.countDocuments({}).then((count) =>
+    res.send(`Phonebook has info for ${count} people`)
   );
 });
 
@@ -75,9 +50,11 @@ app.post("/api/persons/", (req, res) => {
     return res.status(400).json({ error: "Name is missing" });
   }
 
-  if (phonebook.some((person) => person.name === body.name)) {
-    return res.status(400).json({ error: "Already exists" });
-  }
+  Person.findOne({ name: body.name }).then((existingPerson) => {
+    if (existingPerson) {
+      return res.status(400).json({ error: "entry already exists" });
+    }
+  });
 
   const addperson = new Person({
     name: body.name,
@@ -88,14 +65,18 @@ app.post("/api/persons/", (req, res) => {
 });
 
 app.delete("/api/persons/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const personExists = phonebook.some((person) => person.id === id);
-
-  if (!personExists) {
-    return res.status(404).json({ error: "person does not exist" });
-  }
-  phonebook = phonebook.filter((person) => person.id !== id);
-  res.status(204).end();
+  Person.findByIdAndDelete(req.params.id)
+    .then((result) => {
+      if (result) {
+        res.status(204).end();
+      } else {
+        res.status(404).json({ error: "person does not exist" });
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(400).send({ error: "malformed id" });
+    });
 });
 
 const PORT = process.env.PORT;
