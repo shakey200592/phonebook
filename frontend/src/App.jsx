@@ -9,97 +9,86 @@ function App() {
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchPersons = async () => {
       try {
         const response = await axios.get(BASE_URL);
         setPersons(response.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching persons:", error);
       }
     };
-    fetchData();
+    fetchPersons();
   }, []);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-
-    if (name === "name") {
-      setNewName(value);
-    } else if (name === "number") {
-      setNewPhoneNumber(value);
-    }
+    if (name === "name") setNewName(value);
+    if (name === "number") setNewPhoneNumber(value);
   };
 
   const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${BASE_URL}/${id}`);
-      setPersons(persons.filter((person) => person.id !== id));
-    } catch (error) {
-      console.error("Error deleting person:", error);
+    if (window.confirm("Are you sure you want to delete this person?")) {
+      try {
+        await axios.delete(`${BASE_URL}/${id}`);
+        setPersons(persons.filter((person) => person.id !== id));
+      } catch (error) {
+        console.error("Error deleting person:", error);
+      }
     }
   };
 
-  const addPerson = async (event) => {
+  const addOrUpdatePerson = async (event) => {
     event.preventDefault();
 
-    try {
-      // Check if name or number is empty
-      if (!newName.trim() || !newPhoneNumber.trim()) {
-        alert("Name and number cannot be empty");
-        return;
-      }
+    if (!newName.trim() || !newPhoneNumber.trim()) {
+      alert("Name and number cannot be empty");
+      return;
+    }
 
-      const existingPerson = persons.find((person) => person.name === newName);
+    const existingPerson = persons.find((person) => person.name === newName);
 
-      if (existingPerson) {
-        const confirmUpdate = window.confirm(
-          `${newName} already exists in the phonebook. Would you like to change the number to ${newPhoneNumber}`
-        );
+    if (existingPerson) {
+      const confirmUpdate = window.confirm(
+        `${newName} is already in the phonebook. Replace the old number with the new one?`
+      );
 
-        if (confirmUpdate) {
+      if (confirmUpdate) {
+        try {
           const updatedPerson = { ...existingPerson, number: newPhoneNumber };
           const response = await axios.put(
             `${BASE_URL}/${existingPerson.id}`,
             updatedPerson
           );
-
-          // Update the state with the updated person
           setPersons(
             persons.map((person) =>
               person.id === existingPerson.id ? response.data : person
             )
           );
-
           setNewName("");
           setNewPhoneNumber("");
+        } catch (error) {
+          console.error("Error updating person:", error);
         }
-      } else {
-        // Create the new person object
-        const newPersonObject = {
-          name: newName,
-          number: newPhoneNumber,
-        };
-
-        // Send POST request to add the new person
-        const response = await axios.post(BASE_URL, newPersonObject);
-
-        // Update the state with the new person returned from the server
+      }
+    } else {
+      try {
+        const newPerson = { name: newName, number: newPhoneNumber };
+        const response = await axios.post(BASE_URL, newPerson);
         setPersons([...persons, response.data]);
-
-        // Clear the input fields
         setNewName("");
         setNewPhoneNumber("");
+      } catch (error) {
+        console.error("Error adding person:", error);
       }
-    } catch (error) {
-      console.error("Error adding person:", error);
     }
   };
 
   return (
-    <>
-      <form onSubmit={addPerson}>
+    <div>
+      <h1>Phonebook</h1>
+      <form onSubmit={addOrUpdatePerson}>
         <div>
-          name:{" "}
+          Name:{" "}
           <input
             name="name"
             value={newName}
@@ -108,7 +97,7 @@ function App() {
           />
         </div>
         <div>
-          number:{" "}
+          Number:{" "}
           <input
             name="number"
             value={newPhoneNumber}
@@ -116,23 +105,17 @@ function App() {
             placeholder="Enter phone number"
           />
         </div>
-        <div>
-          <button type="submit">add</button>
-        </div>
+        <button type="submit">Add</button>
       </form>
 
       <h2>Numbers</h2>
-      {persons.length > 0 ? (
-        persons.map((person) => (
-          <p className="person" key={person.id}>
-            {person.name}: {person.number}
-            <button onClick={() => handleDelete(person.id)}>DELETE</button>
-          </p>
-        ))
-      ) : (
-        <p>No Results Found</p>
-      )}
-    </>
+      {persons.map((person) => (
+        <div key={person.id}>
+          {person.name}: {person.number}{" "}
+          <button onClick={() => handleDelete(person.id)}>Delete</button>
+        </div>
+      ))}
+    </div>
   );
 }
 
