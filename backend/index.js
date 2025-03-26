@@ -58,9 +58,9 @@ app.get("/info", (req, res) => {
 
 app.get("/api/persons/:id", (req, res) => {
   Person.findById(req.params.id)
-    .then((note) => {
-      if (note) {
-        response.json(note);
+    .then((person) => {
+      if (person) {
+        response.json(person);
       } else {
         response.status(404).end();
       }
