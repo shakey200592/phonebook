@@ -50,18 +50,24 @@ app.post("/api/persons/", (req, res) => {
     return res.status(400).json({ error: "Name is missing" });
   }
 
-  Person.findOne({ name: body.name }).then((existingPerson) => {
-    if (existingPerson) {
-      return res.status(400).json({ error: "entry already exists" });
-    }
-  });
+  Person.findOne({ name: body.name })
+    .then((existingPerson) => {
+      if (existingPerson) {
+        // Stop execution by returning the response
+        return res.status(400).json({ error: "Entry already exists" });
+      }
 
-  const addperson = new Person({
-    name: body.name,
-    number: body.number,
-  });
+      const addperson = new Person({
+        name: body.name,
+        number: body.number,
+      });
 
-  addperson.save().then((savedPerson) => res.json(savedPerson));
+      addperson.save().then((savedPerson) => res.json(savedPerson));
+    })
+    .catch((error) => {
+      console.error("Error saving person:", error);
+      res.status(500).json({ error: "Server error" });
+    });
 });
 
 app.delete("/api/persons/:id", (req, res) => {
