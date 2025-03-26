@@ -32,7 +32,7 @@ function App() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${BASE_URL}/${Number(id)}`);
+      await axios.delete(`${BASE_URL}/${id}`);
       setPersons(persons.filter((person) => person.id !== id));
     } catch (error) {
       console.error("Error deleting person:", error);
@@ -49,25 +49,49 @@ function App() {
         return;
       }
 
-      // Create the new person object
-      const newPersonObject = {
-        name: newName,
-        number: newPhoneNumber,
-      };
+      const existingPerson = persons.find((person) => person.name === newName);
 
-      // Send POST request to add the new person
-      const response = await axios.post(BASE_URL, newPersonObject);
+      if (existingPerson) {
+        const confirmUpdate = window.confirm(
+          `${newName} already exists in the phonebook. Would you like to change the number to ${newPhoneNumber}`
+        );
 
-      // Update the state with the new person returned from the server
-      // This ensures we have the full object with an ID
-      setPersons([...persons, response.data]);
+        if (confirmUpdate) {
+          const updatedPerson = { ...existingPerson, number: newPhoneNumber };
+          const response = await axios.put(
+            `${BASE_URL}/${existingPerson.id}`,
+            updatedPerson
+          );
 
-      // Clear the input fields
-      setNewName("");
-      setNewPhoneNumber("");
+          // Update the state with the updated person
+          setPersons(
+            persons.map((person) =>
+              person.id === existingPerson.id ? response.data : person
+            )
+          );
+
+          setNewName("");
+          setNewPhoneNumber("");
+        }
+      } else {
+        // Create the new person object
+        const newPersonObject = {
+          name: newName,
+          number: newPhoneNumber,
+        };
+
+        // Send POST request to add the new person
+        const response = await axios.post(BASE_URL, newPersonObject);
+
+        // Update the state with the new person returned from the server
+        setPersons([...persons, response.data]);
+
+        // Clear the input fields
+        setNewName("");
+        setNewPhoneNumber("");
+      }
     } catch (error) {
       console.error("Error adding person:", error);
-      alert("Failed to add person. Please try again.");
     }
   };
 
