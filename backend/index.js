@@ -85,6 +85,31 @@ app.delete("/api/persons/:id", (req, res) => {
     });
 });
 
+app.put("/api/persons/:id", (req, res) => {
+  const { number } = req.body;
+
+  if (!number) {
+    return res.status(400).json({ error: "number is missing" });
+  }
+
+  Person.findByIdAndUpdate(
+    req.params.id,
+    { number },
+    { new: true, runValidators: true, context: "query" }
+  )
+    .then((updatedPerson) => {
+      if (updatedPerson) {
+        res.json(updatedPerson);
+      } else {
+        res.status(404).json({ error: "person not found" });
+      }
+    })
+    .catch((error) => {
+      console.error("Error updating person", error);
+      res.status(400).json({ error: "malformed id or validation error" });
+    });
+});
+
 const PORT = process.env.PORT;
 app.listen(PORT);
 console.log(`Server Listening on Port ${PORT}`);
