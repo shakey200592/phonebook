@@ -11,7 +11,8 @@
     "start": "node index.js",
     "dev": "node --watch index.js",
     "build:ui": "rm -rf dist && cd ../frontend && npm run build && cp -r dist ../backend",
-    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push"
+    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push",
+    "lint": "eslint --fix ."
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -20,5 +21,11 @@
     "mongoose": "^8.13.0",
     "morgan": "^1.10.0",
     "notenv": "^2.0.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "@stylistic/eslint-plugin-js": "^4.2.0",
+    "eslint": "^9.23.0",
+    "globals": "^16.0.0"
   }
 }
