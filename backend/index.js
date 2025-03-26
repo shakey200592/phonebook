@@ -1,20 +1,17 @@
 require("dotenv").config();
-
-const express = require("express");
-const app = express();
-app.use(express.json());
-
 const morgan = require("morgan");
+const express = require("express");
+const cors = require("cors");
 
+const app = express();
+
+app.use(express.json());
+app.use(cors());
+app.use(express.static("dist"));
 morgan.token("body", (req) => JSON.stringify(req.body));
 app.use(
   morgan(":method :url :status :res[content-length] - :response-time ms :body")
 );
-
-const cors = require("cors");
-app.use(cors());
-
-app.use(express.static("dist"));
 
 const Person = require("./models/person");
 
@@ -67,7 +64,7 @@ app.get("/api/persons/:id", (req, res) => {
     })
     .catch((error) => {
       console.log(error);
-      response.status(500).end();
+      res.status(400).send({ error: "maformed id" });
     });
 });
 
