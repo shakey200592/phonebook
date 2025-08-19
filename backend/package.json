@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm install",
-    "start": "node index.js",
+    "start": "node --watch index.js",
     "build:ui": "rm -rf dist && cd ../frontend && npm run build && cp -r dist ../backend",
     "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push"
   },
@@ -14,7 +14,10 @@
   "author": "Jake Mcdermott",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "mongoose": "^8.17.2",
+    "mongosh": "^2.5.6",
     "morgan": "^1.10.1"
   }
 }
