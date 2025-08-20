@@ -49,7 +49,7 @@ function App() {
         update(existingPerson.id, existingPerson, newNumber).then((res) => {
           setPersons(
             persons.map((person) =>
-              person.id !== existingPerson.id ? person : res.data,
+              person.id !== existingPerson.id ? person : res.data.data,
             ),
           );
         });

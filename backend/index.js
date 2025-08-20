@@ -16,7 +16,6 @@ const errorHandler = (error, req, res, next) => {
   }
   next(error);
 };
-
 const createError = (errorMessage, errorName, next) => {
   const error = new Error(errorMessage);
   error.name = errorName;
