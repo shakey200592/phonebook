@@ -6,9 +6,27 @@ dotenv.config();
 
 const app = express();
 
+const errorHandler = (error, req, res, next) => {
+  if (error.name === "CastError") {
+    return res.status(400).json({ error: error.message });
+  } else if (error.name === "MissingFieldsError") {
+    return res.status(400).json({ error: error.message });
+  } else if (error.name === "ValidationError") {
+    return res.status(400).json({ error: error.message });
+  }
+  next(error);
+};
+
+const createError = (errorMessage, errorName, next) => {
+  const error = new Error(errorMessage);
+  error.name = errorName;
+  next(error);
+};
+
 // Middlewares
-app.use(express.json());
 app.use(express.static("dist"));
+app.use(express.json());
+
 morgan.token("body", (req) => JSON.stringify(req.body));
 app.use(
   morgan(
@@ -21,29 +39,42 @@ app.get("/api/persons", (req, res) => {
     res.json(persons);
   });
 });
-app.get("/api/persons/:id", (req, res) => {
+app.get("/api/persons/:id", (req, res, next) => {
   const { id } = req.params;
-  Person.findById(id).then((person) => {
-    res.json(person);
-  });
+  Person.findById(id)
+    .then((person) => {
+      if (person) {
+        res.json(person);
+      } else {
+        res.status(404).json({ message: `Person with id ${id} not found` });
+      }
+    })
+    .catch((error) => {
+      console.log(error.name);
+      next(error);
+    });
 });
 app.get("/api/info", (req, res) => {
   const today = new Date();
   res.send(`Phonebook has info for ${persons.length} people<br><br> ${today}`);
 });
-app.post("/api/persons", (req, res) => {
-  const data = req.body;
+app.post("/api/persons", (req, res, next) => {
+  const { name, number } = req.body;
 
-  if (!data.name || !data.number) {
-    return res.status(400).json({ error: "All fields must contain data" }); //
+  if (!name || !number) {
+    return createError(
+      "All fields must contain data",
+      "MissingFieldsError",
+      next,
+    );
   }
 
-  Person.findOne({ name: data.name })
+  Person.findOne({ name })
     .then((person) => {
       if (person) {
         res.status(400).json({ message: "Person already exists" });
       }
-      const newPerson = new Person(data);
+      const newPerson = new Person({ name, number });
       return newPerson.save();
     })
     .then((savedPerson) => {
@@ -51,11 +82,7 @@ app.post("/api/persons", (req, res) => {
         .status(201)
         .json({ message: "succesfully created new person", data: savedPerson });
     })
-    .catch((err) => {
-      return res
-        .status(500)
-        .json({ message: "Something went wrong", error: err });
-    });
+    .catch((error) => next(error));
 });
 app.delete("/api/persons/:id", (req, res) => {
   const { id } = req.params;
@@ -65,6 +92,8 @@ app.delete("/api/persons/:id", (req, res) => {
       res.status(500).json({ message: "Something went wrong", error: err }),
     );
 });
+
+app.use(errorHandler);
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server started on port ${port}`));

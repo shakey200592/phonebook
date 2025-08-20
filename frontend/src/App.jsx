@@ -10,14 +10,13 @@ function App() {
   const [newNumber, setNewNumber] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isError, setError] = useState("");
 
   useEffect(() => {
-    setTimeout(() => {
-      getAll().then((res) => {
-        setPersons(res.data);
-        setLoading(false);
-      });
-    }, 3000);
+    getAll().then((res) => {
+      setPersons(res.data);
+      setLoading(false);
+    });
   }, []);
 
   const handleInputChange = (event) => {
@@ -33,9 +32,14 @@ function App() {
 
     if (!existingPerson) {
       const updatedPerson = { name: newName, number: newNumber };
-      create(updatedPerson).then((res) => {
-        setPersons([...persons, res.data.data]);
-      });
+      create(updatedPerson)
+        .then((res) => {
+          setPersons([...persons, res.data.data]);
+        })
+        .catch((error) => {
+          console.log(error.response.data.error);
+          setError(error.response.data.error);
+        });
     } else {
       if (
         window.confirm(
@@ -77,6 +81,7 @@ function App() {
         <PersonForm
           handleNameInput={handleInputChange}
           handleNumberInput={handleInputChange}
+          error={isError}
         ></PersonForm>
       </form>
       <h2>Numbers</h2>

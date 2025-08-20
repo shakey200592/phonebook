@@ -1,4 +1,4 @@
-export const PersonForm = ({ handleNameInput, handleNumberInput }) => {
+export const PersonForm = ({ handleNameInput, handleNumberInput, error }) => {
   return (
     <>
       <div>
@@ -10,6 +10,7 @@ export const PersonForm = ({ handleNameInput, handleNumberInput }) => {
       <div>
         <button type={"submit"}>Add</button>
       </div>
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </>
   );
 };
