@@ -56,7 +56,9 @@ app.get("/api/persons/:id", (req, res, next) => {
 });
 app.get("/api/info", (req, res) => {
   const today = new Date();
-  res.send(`Phonebook has info for ${persons.length} people<br><br> ${today}`);
+  const phonebook = Person.find({}).then((persons) => {
+    res.send(`${today}<br>Phonebook has ${persons.length} persons`);
+  });
 });
 app.post("/api/persons", (req, res, next) => {
   const { name, number } = req.body;
@@ -91,6 +93,25 @@ app.delete("/api/persons/:id", (req, res) => {
     .catch((err) =>
       res.status(500).json({ message: "Something went wrong", error: err }),
     );
+});
+app.put("/api/persons/:id", (req, res, next) => {
+  const { id } = req.params;
+  const number = req.body.number;
+  Person.findByIdAndUpdate(
+    id,
+    { number: number },
+    { new: true, runValidators: true },
+  )
+    .then((updatedPerson) => {
+      if (updatedPerson) {
+        res
+          .status(200)
+          .json({ message: "Succesfully updated Person", data: updatedPerson });
+      } else {
+        res.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
 app.use(errorHandler);
